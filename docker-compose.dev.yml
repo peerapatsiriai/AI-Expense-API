@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  api-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: builder
+    container_name: ai-expenses-api-dev
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+    env_file:
+      - .env
+    volumes:
+      - ./src:/app/src
+      - ./tsconfig.json:/app/tsconfig.json
+      - ./package.json:/app/package.json
+      - ./nodemon.json:/app/nodemon.json
+    command: npm run start:dev
+    restart: unless-stopped
+    networks:
+      - ai-expenses-api
+
+networks:
+  ai-expenses-api:
+    driver: bridge 

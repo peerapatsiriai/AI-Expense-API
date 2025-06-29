@@ -1,0 +1,63 @@
+{
+  "name": "ai-expenses-test",
+  "version": "1.0.0",
+  "description": "Testing AI Expenses API",
+  "main": "dist/server.js",
+  "scripts": {
+    "build": "tsc && tsc-alias",
+    "start": "node -r tsconfig-paths/register dist/server.js",
+    "start:dev": "nodemon --exec ts-node -r tsconfig-paths/register src/server.ts",
+    "test:api": "ts-node -r tsconfig-paths/register src/tests/extraction.test.ts",
+    "dev:full": "concurrently \"npm run start:dev\" \"npm run test:api\"",
+    "script:gemini": "ts-node -r tsconfig-paths/register src/script/run-gemini.ts",
+    "script:expense": "ts-node -r tsconfig-paths/register src/script/test-expense.ts",
+    "docker:build": "docker build -t gemini-expense-api .",
+    "docker:run": "docker run -p 3000:3000 --env-file .env gemini-expense-api",
+    "docker:compose:up": "docker-compose up",
+    "docker:compose:down": "docker-compose down",
+    "docker:compose:build": "docker-compose build",
+    "docker:dev:up": "docker-compose -f docker-compose.dev.yml up",
+    "docker:dev:down": "docker-compose -f docker-compose.dev.yml down",
+    "docker:dev:build": "docker-compose -f docker-compose.dev.yml build",
+    "docker:clean": "docker system prune -f && docker volume prune -f"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.2.1",
+    "axios": "^1.6.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "helmet": "^7.1.0",
+    "morgan": "^1.10.0",
+    "nodemon": "^3.1.10",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.0",
+    "yup": "^1.3.3"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/morgan": "^1.9.9",
+    "@types/node": "^20.19.2",
+    "@types/swagger-jsdoc": "^6.0.4",
+    "@types/swagger-ui-express": "^4.1.6",
+    "concurrently": "^8.2.2",
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
+    "tsc-alias": "^1.8.8",
+    "typescript": "^5.8.3"
+  },
+  "keywords": [
+    "gemini",
+    "ai",
+    "api",
+    "service",
+    "expense",
+    "extraction",
+    "typescript",
+    "express",
+    "swagger"
+  ],
+  "author": "",
+  "license": "ISC"
+}
