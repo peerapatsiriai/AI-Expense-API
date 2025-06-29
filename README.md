@@ -1,13 +1,15 @@
 # AI Expense API
 
-A powerful REST API service that uses Google Gemini AI to extract expense information from text and AI-powered speech-to-text conversion. Built with TypeScript, Express.js, and modern development practices.
+A powerful REST API service that uses Google Gemini AI to extract expense information from text, AI-powered speech-to-text conversion, and OCR text extraction from images and documents. Built with TypeScript, Express.js, and modern development practices.
 
 ## 🚀 Features
 
 - **AI-Powered Expense Extraction**: Uses Google Gemini AI to intelligently parse expense information from text
 - **AI Speech-to-Text Conversion**: Convert audio files to text using advanced AI speech recognition
-- **Multi-language Support**: Handles both Thai and English text and audio input
-- **Boosting Words**: Enhance recognition accuracy for specific words and phrases
+- **AI OCR Text Extraction**: Extract text from images and PDFs using AI optical character recognition
+- **Multi-language Support**: Handles both Thai and English text, audio, and image input
+- **Boosting Words**: Enhance speech recognition accuracy for specific words and phrases
+- **Box Threshold Control**: Adjust OCR confidence threshold for optimal text detection
 - **RESTful API**: Clean, well-documented REST endpoints
 - **Swagger Documentation**: Interactive API documentation with OpenAPI 3.0
 - **TypeScript**: Full type safety and modern JavaScript features
@@ -16,14 +18,15 @@ A powerful REST API service that uses Google Gemini AI to extract expense inform
 - **Input Validation**: Robust request validation using Yup schemas
 - **Error Handling**: Comprehensive error handling and logging
 - **Health Checks**: Built-in health monitoring endpoints
-- **File Upload Support**: Handle multiple audio files with size and format validation
+- **File Upload Support**: Handle multiple files with size and format validation
 
 ## 📋 Prerequisites
 
 - Node.js (v16 or higher)
 - npm or yarn
 - Google Gemini API key
-- Speech-to-Text API key 
+- Speech-to-Text API key
+- OCR API key
 - Docker (optional, for containerized deployment)
 
 ## 🛠️ Installation
@@ -51,16 +54,16 @@ cp env.example .env
 ```env
 # Required
 GEMINI_API_KEY=your_gemini_api_key_here
+SPEECH_TO_TEXT_API_KEY=your_speech_to_text_api_key_here
+OCR_API_KEY=your_ocr_api_key_here
 
 # Optional (with defaults)
 GEMINI_MODEL=gemini-pro
 GEMINI_BASE_URL=https://generativelanguage.googleapis.com
+SPEECH_TO_TEXT_BASE_URL=https://stt.infer.visai.ai
+OCR_BASE_URL=https://ocrdoc.infer.visai.ai
 PORT=3000
 API_BASE_URL=http://localhost
-
-# Speech-to-Text API Configuration (optional - has default)
-SPEECH_TO_TEXT_API_KEY=c53885651642eb532ed5d0625104e8c0
-SPEECH_TO_TEXT_BASE_URL=https://stt.infer.visai.ai
 ```
 
 ## 🚀 Running the Application
@@ -174,12 +177,6 @@ curl -X POST http://localhost:3000/api/expenses/v1/speech-to-text/transcribe \
           "transcript": "มื้อเช้ากินโจ๊กห้าสิบบาทยามเที่ยงกินก๋วยเตี๋ยวเจ็ดสิบห้าบาท",
           "start_time": 0.6143344709897611,
           "end_time": 6.928327645051194
-        },
-        {
-          "speaker": "SPEAKER_00",
-          "transcript": "มื้อเย็นกินสุกี้สองร้อยห้าสิบบาท",
-          "start_time": 7.286689419795222,
-          "end_time": 10.546075085324231
         }
       ],
       "duration": 10.922666666666666
@@ -189,42 +186,89 @@ curl -X POST http://localhost:3000/api/expenses/v1/speech-to-text/transcribe \
 }
 ```
 
-#### 3. Test Endpoints
+#### 3. OCR Text Extraction
+```http
+POST /api/expenses/v1/ocr/extract
+```
+
+**Request (multipart/form-data):**
+- `files`: Image files or PDFs (max 5 files, 50MB each)
+- `box_threshold`: Optional confidence threshold (0.0 to 1.0, default: 0.4)
+
+**Example with curl:**
+```bash
+curl -X POST http://localhost:3000/api/expenses/v1/ocr/extract \
+  -F "files=@receipt.jpg" \
+  -F "box_threshold=0.4"
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "filename": "receipt.jpg",
+      "status": "success",
+      "result": [
+        {
+          "text": "กาแฟ 60 บาท",
+          "confidence": 0.95,
+          "bbox": [100, 200, 300, 250]
+        }
+      ]
+    }
+  ],
+  "message": "Text extraction completed successfully"
+}
+```
+
+#### 4. Test Endpoints
 ```http
 GET /api/expenses/v1/test
 GET /api/expenses/v1/speech-to-text/test
+GET /api/expenses/v1/ocr/test
 ```
 
 Returns sample results for testing purposes.
 
-#### 4. Health Checks
+#### 5. Health Checks
 ```http
 GET /api/expenses/v1/health
 GET /api/expenses/v1/speech-to-text/health
+GET /api/expenses/v1/ocr/health
 ```
 
 Returns service health status.
 
-## 🎯 Speech-to-Text Features
+## 🎯 Advanced Features
 
-### **Boosting Words**
+### **Speech-to-Text Boosting Words**
 Enhance recognition accuracy for specific words:
 - **Maximum 10 words** can be provided
 - **Examples**: `สวัสดี`, `กรุงเทพ`, `วันจันทร์`
 - **Use cases**: Names, technical terms, place names
 - **Performance**: No impact on response time
 
-### **Supported Audio Formats**
+### **OCR Box Threshold**
+Control text detection confidence:
+- **Range**: 0.0 to 1.0
+- **Default**: 0.4
+- **Low values (0.0-0.3)**: More text detected, less accurate
+- **High values (0.7-1.0)**: Less text detected, more accurate
+
+### **Supported File Formats**
+
+#### **Speech-to-Text:**
 - MP3, WAV, M4A, and other audio formats
 - Maximum file size: 50MB per file
 - Maximum files: 5 files per request
 
-### **Postman Setup**
-1. **Method**: `POST`
-2. **URL**: `http://localhost:3000/api/expenses/v1/speech-to-text/transcribe`
-3. **Body**: `form-data`
-4. **Files**: Select audio files
-5. **Boosting Words**: Add optional words (Text type)
+#### **OCR:**
+- **Images**: JPG, PNG, GIF, BMP, etc.
+- **Documents**: PDF
+- Maximum file size: 50MB per file
+- Maximum files: 5 files per request
 
 ## 🏗️ Project Structure
 
@@ -241,12 +285,18 @@ src/
 │   │   ├── extract.validation.ts
 │   │   ├── extract.dto.ts
 │   │   └── gemini.service.ts
-│   └── speechToText/      # Speech-to-text module
-│       ├── speechToText.controller.ts
-│       ├── speechToText.rout.ts
-│       ├── speechToText.service.ts
-│       ├── speechToText.validation.ts
-│       └── speechToText.dto.ts
+│   ├── speechToText/      # Speech-to-text module
+│   │   ├── speechToText.controller.ts
+│   │   ├── speechToText.rout.ts
+│   │   ├── speechToText.service.ts
+│   │   ├── speechToText.validation.ts
+│   │   └── speechToText.dto.ts
+│   └── imageOCR/              # OCR module
+│       ├── ocr.controller.ts
+│       ├── ocr.rout.ts
+│       ├── ocr.service.ts
+│       ├── ocr.validation.ts
+│       └── ocr.dto.ts
 ├── middleware/            # Express middleware
 │   └── validation.ts     # Request validation middleware
 ├── routes/               # Route definitions
@@ -327,12 +377,14 @@ npm run docker:clean
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
 | `GEMINI_API_KEY` | ✅ | - | Google Gemini API key |
+| `SPEECH_TO_TEXT_API_KEY` | ✅ | - | Speech-to-text API key |
+| `OCR_API_KEY` | ✅ | - | OCR API key |
 | `GEMINI_MODEL` | ❌ | `gemini-pro` | Gemini model to use |
 | `GEMINI_BASE_URL` | ❌ | `https://generativelanguage.googleapis.com` | Gemini API base URL |
+| `SPEECH_TO_TEXT_BASE_URL` | ❌ | `https://stt.infer.visai.ai` | Speech-to-text API base URL |
+| `OCR_BASE_URL` | ❌ | `https://ocrdoc.infer.visai.ai` | OCR API base URL |
 | `PORT` | ❌ | `3000` | Server port |
 | `API_BASE_URL` | ❌ | `http://localhost` | API base URL for Swagger |
-| `SPEECH_TO_TEXT_API_KEY` | ❌ | ` ` | Speech-to-text API key |
-| `SPEECH_TO_TEXT_BASE_URL` | ❌ | `https://stt.infer.visai.ai` | Speech-to-text API base URL |
 
 ## 🤝 Contributing
 
@@ -344,6 +396,11 @@ npm run docker:clean
 
 ## 🔄 Version History
 
+- **v1.2.0**: Added AI OCR text extraction module
+  - Image and PDF text extraction
+  - Box threshold control for confidence adjustment
+  - Comprehensive file validation
+  - Functional programming architecture
 - **v1.1.0**: Added AI Speech-to-Text conversion module
   - Audio file upload support (MP3, WAV, M4A)
   - Boosting words for enhanced recognition

@@ -10,6 +10,9 @@ const appConfig = {
     speechToTextApiKey: process.env.SPEECH_TO_TEXT_API_KEY,
     speechToTextBaseURL: process.env.SPEECH_TO_TEXT_BASE_URL || "https://stt.infer.visai.ai",
 
+    ocrApiKey: process.env.OCR_API_KEY,
+    ocrBaseURL: process.env.OCR_BASE_URL || "https://ocrdoc.infer.visai.ai",
+
     apiVersion: process.env.API_VERSION || "v1",
     port: process.env.PORT || 3000,
     apiBaseURL: process.env.API_BASE_URL || "http://localhost",
