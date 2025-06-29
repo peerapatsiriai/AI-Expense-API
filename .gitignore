@@ -56,3 +56,6 @@ nodemon-debug.json
 
 # Docker
 .dockerignore 
+
+# Data for testing
+data/

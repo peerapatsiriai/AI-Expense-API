@@ -1,11 +1,13 @@
 # AI Expense API
 
-A powerful REST API service that uses Google Gemini AI to extract expense information from text in both Thai and English languages. Built with TypeScript, Express.js, and modern development practices.
+A powerful REST API service that uses Google Gemini AI to extract expense information from text and AI-powered speech-to-text conversion. Built with TypeScript, Express.js, and modern development practices.
 
 ## 🚀 Features
 
 - **AI-Powered Expense Extraction**: Uses Google Gemini AI to intelligently parse expense information from text
-- **Multi-language Support**: Handles both Thai and English text input
+- **AI Speech-to-Text Conversion**: Convert audio files to text using advanced AI speech recognition
+- **Multi-language Support**: Handles both Thai and English text and audio input
+- **Boosting Words**: Enhance recognition accuracy for specific words and phrases
 - **RESTful API**: Clean, well-documented REST endpoints
 - **Swagger Documentation**: Interactive API documentation with OpenAPI 3.0
 - **TypeScript**: Full type safety and modern JavaScript features
@@ -14,12 +16,14 @@ A powerful REST API service that uses Google Gemini AI to extract expense inform
 - **Input Validation**: Robust request validation using Yup schemas
 - **Error Handling**: Comprehensive error handling and logging
 - **Health Checks**: Built-in health monitoring endpoints
+- **File Upload Support**: Handle multiple audio files with size and format validation
 
 ## 📋 Prerequisites
 
 - Node.js (v16 or higher)
 - npm or yarn
 - Google Gemini API key
+- Speech-to-Text API key 
 - Docker (optional, for containerized deployment)
 
 ## 🛠️ Installation
@@ -53,6 +57,10 @@ GEMINI_MODEL=gemini-pro
 GEMINI_BASE_URL=https://generativelanguage.googleapis.com
 PORT=3000
 API_BASE_URL=http://localhost
+
+# Speech-to-Text API Configuration (optional - has default)
+SPEECH_TO_TEXT_API_KEY=c53885651642eb532ed5d0625104e8c0
+SPEECH_TO_TEXT_BASE_URL=https://stt.infer.visai.ai
 ```
 
 ## 🚀 Running the Application
@@ -135,19 +143,88 @@ POST /api/expenses/v1/extract
 }
 ```
 
-#### 2. Test Endpoint
+#### 2. Speech-to-Text Conversion
 ```http
-GET /api/expenses/v1/test
+POST /api/expenses/v1/speech-to-text/transcribe
 ```
 
-Returns sample expense extraction results for testing purposes.
+**Request (multipart/form-data):**
+- `files`: Audio files (max 5 files, 50MB each)
+- `boosting_words`: Optional words to enhance recognition (max 10 words)
 
-#### 3. Health Check
+**Example with curl:**
+```bash
+curl -X POST http://localhost:3000/api/expenses/v1/speech-to-text/transcribe \
+  -F "files=@audio.mp3" \
+  -F "boosting_words=สวัสดี" \
+  -F "boosting_words=วันจันทร์"
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "filename": "voice_01.m4a",
+      "status": "success",
+      "result": [
+        {
+          "speaker": "SPEAKER_00",
+          "transcript": "มื้อเช้ากินโจ๊กห้าสิบบาทยามเที่ยงกินก๋วยเตี๋ยวเจ็ดสิบห้าบาท",
+          "start_time": 0.6143344709897611,
+          "end_time": 6.928327645051194
+        },
+        {
+          "speaker": "SPEAKER_00",
+          "transcript": "มื้อเย็นกินสุกี้สองร้อยห้าสิบบาท",
+          "start_time": 7.286689419795222,
+          "end_time": 10.546075085324231
+        }
+      ],
+      "duration": 10.922666666666666
+    }
+  ],
+  "message": "Audio transcription completed successfully"
+}
+```
+
+#### 3. Test Endpoints
+```http
+GET /api/expenses/v1/test
+GET /api/expenses/v1/speech-to-text/test
+```
+
+Returns sample results for testing purposes.
+
+#### 4. Health Checks
 ```http
 GET /api/expenses/v1/health
+GET /api/expenses/v1/speech-to-text/health
 ```
 
 Returns service health status.
+
+## 🎯 Speech-to-Text Features
+
+### **Boosting Words**
+Enhance recognition accuracy for specific words:
+- **Maximum 10 words** can be provided
+- **Examples**: `สวัสดี`, `กรุงเทพ`, `วันจันทร์`
+- **Use cases**: Names, technical terms, place names
+- **Performance**: No impact on response time
+
+### **Supported Audio Formats**
+- MP3, WAV, M4A, and other audio formats
+- Maximum file size: 50MB per file
+- Maximum files: 5 files per request
+
+### **Postman Setup**
+1. **Method**: `POST`
+2. **URL**: `http://localhost:3000/api/expenses/v1/speech-to-text/transcribe`
+3. **Body**: `form-data`
+4. **Files**: Select audio files
+5. **Boosting Words**: Add optional words (Text type)
 
 ## 🏗️ Project Structure
 
@@ -157,13 +234,19 @@ src/
 │   ├── appConfig.ts       # Application configuration
 │   └── swaggerConfig.ts   # Swagger documentation config
 ├── modules/               # Feature modules
-│   └── extractExpenses/   # Expense extraction module
-│       ├── extract.controller.ts
-│       ├── extract.rout.ts
-│       ├── extract.service.ts
-│       ├── extract.validation.ts
-│       ├── extract.dto.ts
-│       └── gemini.service.ts
+│   ├── extractExpenses/   # Expense extraction module
+│   │   ├── extract.controller.ts
+│   │   ├── extract.rout.ts
+│   │   ├── extract.service.ts
+│   │   ├── extract.validation.ts
+│   │   ├── extract.dto.ts
+│   │   └── gemini.service.ts
+│   └── speechToText/      # Speech-to-text module
+│       ├── speechToText.controller.ts
+│       ├── speechToText.rout.ts
+│       ├── speechToText.service.ts
+│       ├── speechToText.validation.ts
+│       └── speechToText.dto.ts
 ├── middleware/            # Express middleware
 │   └── validation.ts     # Request validation middleware
 ├── routes/               # Route definitions
@@ -248,6 +331,8 @@ npm run docker:clean
 | `GEMINI_BASE_URL` | ❌ | `https://generativelanguage.googleapis.com` | Gemini API base URL |
 | `PORT` | ❌ | `3000` | Server port |
 | `API_BASE_URL` | ❌ | `http://localhost` | API base URL for Swagger |
+| `SPEECH_TO_TEXT_API_KEY` | ❌ | ` ` | Speech-to-text API key |
+| `SPEECH_TO_TEXT_BASE_URL` | ❌ | `https://stt.infer.visai.ai` | Speech-to-text API base URL |
 
 ## 🤝 Contributing
 
@@ -259,7 +344,12 @@ npm run docker:clean
 
 ## 🔄 Version History
 
+- **v1.1.0**: Added AI Speech-to-Text conversion module
+  - Audio file upload support (MP3, WAV, M4A)
+  - Boosting words for enhanced recognition
+  - File size and format validation
+  - Functional programming architecture
 - **v1.0.0**: Initial release with AI expense extraction
-- Modular architecture with TypeScript
-- Docker support for easy deployment
-- Comprehensive API documentation with Swagger 
+  - Modular architecture with TypeScript
+  - Docker support for easy deployment
+  - Comprehensive API documentation with Swagger 
