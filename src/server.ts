@@ -57,6 +57,18 @@ app.use('*', (req: Request, res: Response) => {
 
 // Start server
 app.listen(PORT, () => {
+  // Validate environment variables
+  const { geminiApiKey, speechToTextApiKey, ocrApiKey } = appConfig;
+
+  if (!geminiApiKey || !speechToTextApiKey || !ocrApiKey) {
+    console.error('Missing required environment variables');
+    console.log("GEMINI_API_KEY: ", geminiApiKey);
+    console.log("SPEECH_TO_TEXT_API_KEY: ", speechToTextApiKey);
+    console.log("OCR_API_KEY: ", ocrApiKey);
+    console.log("Please check your .env file and ensure all required variables are set.");
+    process.exit(1);
+  }
+
   displayLogo();
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📚 Swagger documentation: http://localhost:${PORT}/api-docs`);
